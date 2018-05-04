@@ -1,3 +1,38 @@
+var filter = 4;
+
+
+//function to rebuild diagram with new constraints
+function rebuild(){
+  filter = parseInt(document.getElementById("myText").value);
+  //build diagram
+  //using jQuery again to retrieve the data when it is finished loading, then perform other functions
+  $.when(
+    getData()
+  ).done(
+    (data) => {
+      //construct chord diagram
+      var matrix = [];
+      var uniqueStreets = [];
+      var result = convertToMatrix(data);
+      matrix = result[0];
+      uniqueStreets = result[1];
+      var visual = document.getElementById("visual");
+      var rotation = .99;
+      var chord_options = {
+          "gnames": uniqueStreets,
+          "rotation": rotation,
+          "colors": ["#031d44", "#03357f", "#7084a3", "#8abee2", "#81d7f9", "#02238e", "#4da1ea", "#58c143", "#93bded", "#c2dd6e", "#fffddd", "#9fa9f4", "#3e3e87"]
+      };
+  
+        Chord(visual, chord_options, matrix);
+    
+      d3.select(self.frameElement).style("height", "600px");
+    }
+  ).fail(function (err) {
+    console.log(err);
+  });
+  
+}
 
 //import data and convert to usable form (route object {start, end})
 function getData() {
@@ -53,42 +88,39 @@ function convertToMatrix(routes){
     )
     matrix[si][ei] += 1;
   }
+  var filteredMatrix = [];
+  var filteredStreets = [];
   //filter data to include routes with 5 or more entries
   for (let i = 0; i < uniqueStreets.length; i++) {
     for (let j = 0; j < uniqueStreets.length; j++) {
-      if(matrix[i][j] < 0){
-        matrix[i][j] = 0;
+      if(matrix[i][j] >= filter){
+        if (!filteredStreets.includes(uniqueStreets[i]))
+          filteredStreets.push(uniqueStreets[i])
+        if (!filteredStreets.includes(uniqueStreets[j]))
+          filteredStreets.push(uniqueStreets[j])
       }
     }
   }
-  return matrix;
+  //init matrix
+  for (let i = 0; i < filteredStreets.length; i++) {
+    filteredMatrix[i] = new Array(filteredStreets.length);
+    filteredMatrix[i].fill(0);
+  }
+  //forming the matrix
+  for (let i = 0; i < routes.length; i++) {
+    var si = filteredStreets.findIndex(
+      (street) => { return routes[i].start == street}
+    );
+    var ei = filteredStreets.findIndex(
+      (street) => { return routes[i].end == street}
+    )
+    if(si != -1 && ei != -1)
+      filteredMatrix[si][ei] += 1;
+  }
+  
+  return [filteredMatrix, filteredStreets]
 
 }
-
-//using jQuery again to retrieve the data when it is finished loading, then perform other functions
-$.when(
-  getData()
-).done(
-  (data) => {
-    //construct chord diagram
-    var matrix = convertToMatrix(data)
-    var visual = document.getElementById("visual");
-
-    var rotation = .99;
-    var uniqueStreets = getUniqueRoads(data);
-    var chord_options = {
-        "gnames": uniqueStreets,
-        "rotation": rotation,
-        "colors": ["#031d44", "#03357f", "#7084a3", "#8abee2", "#81d7f9", "#02238e", "#4da1ea", "#58c143", "#93bded", "#c2dd6e", "#fffddd", "#9fa9f4", "#3e3e87"]
-    };
-
-      Chord(visual, chord_options, matrix);
-  
-    d3.select(self.frameElement).style("height", "600px");
-  }
-).fail(function (err) {
-  console.log(err);
-});
 
 
 
@@ -96,8 +128,8 @@ $.when(
 
         // initialize the chord configuration variables
         var config = {
-            width: 640,
-            height: 560,
+            width: 660,
+            height: 660,
             rotation: 0,
             textgap: 10,
             colors: ["#031d44", "#03357f", "#7084a3", "#8abee2", "#81d7f9", "#02238e", "#4da1ea", "#58c143", "#93bded", "#c2dd6e", "#fffddd", "#9fa9f4", "#3e3e87"]
@@ -135,7 +167,7 @@ $.when(
             .sortSubgroups(d3.descending)
             .matrix(matrix);
 
-        var innerRadius = Math.min(width, height) * .46,
+        var innerRadius = Math.min(width, height) * .32,
             outerRadius = innerRadius * 1.1;
 
         var fill = d3.scale.ordinal()
@@ -173,7 +205,7 @@ $.when(
                     + "translate(" + (outerRadius + textgap) + ")"
                     + (d.angle > Math.PI ? "rotate(180)" : "");
               })
-            //.text(function(d) { return gnames[d.index]; });
+            .text(function(d) { return gnames[d.index]; });
 
         svg.append("g")
             .attr("class", "chord")
