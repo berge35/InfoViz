@@ -135,7 +135,7 @@ $.when(
             .sortSubgroups(d3.descending)
             .matrix(matrix);
 
-        var innerRadius = Math.min(width, height) * .31,
+        var innerRadius = Math.min(width, height) * .46,
             outerRadius = innerRadius * 1.1;
 
         var fill = d3.scale.ordinal()
