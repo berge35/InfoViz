@@ -7,7 +7,7 @@ function rebuild(){
   //build diagram
   //using jQuery again to retrieve the data when it is finished loading, then perform other functions
   $.when(
-    getData()
+    getDataC()
   ).done(
     (data) => {
       //construct chord diagram
@@ -35,7 +35,7 @@ function rebuild(){
 }
 
 //import data and convert to usable form (route object {start, end})
-function getData() {
+function getDataC() {
   var defer = $.Deferred();   //using jQuery for asynchronous loading
   var validRoutes = [];    //all trps with more than one streetname
   d3.csv("../trips.csv", function (error, data) {
