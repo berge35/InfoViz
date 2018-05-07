@@ -60,6 +60,9 @@ function getData() {
           .start();
 
         function draw(words) {
+          var div = d3.select("body").append("div")   
+            .attr("class", "tooltip")               
+            .style("opacity", 0);
           d3.select(svg_location).append("svg")
               .attr("width", width)
               .attr("height", height)
@@ -75,8 +78,23 @@ function getData() {
               .attr("transform", function(d) {
                 return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
               })
-              .text(function(d) { return d.key; });
+              .text(function(d) { return d.key; })
+              .on("mouseover", function(d) {      
+                div.transition()        
+                    .duration(200)      
+                    .style("opacity", 1.0);      
+                div .html("Occurances: " + d.value + "<br/>")  
+                    .style("left", (d3.event.pageX) + "px")     
+                    .style("top", (d3.event.pageY - 28) + "px");
+                console.log(d.key)    
+                })                  
+            .on("mouseout", function(d) {       
+                div.transition()        
+                    .duration(500)      
+                    .style("opacity", 0);   
+            });
         }
+
 
         d3.layout.cloud().stop();
       }
